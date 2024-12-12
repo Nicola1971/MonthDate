@@ -2,7 +2,7 @@
 if(!defined('MODX_BASE_PATH')){die('What are you doing? Get out of here!');}
 
 /**
- * MonthsDate Snippet - Formats dates with localized month names
+ * MonthDate Snippet - Formats dates with localized month names
  * Works with both system dates and template variables
  * $date - date to use (can be TV or system date)
  * $date2 - backup date (can be TV or system date)
@@ -14,7 +14,7 @@ global $modx;
 $lang = isset($lang) ? $lang : 'en';
 $snip_path = $modx->config['base_path'] . "assets/snippets/";
 $_MLang = array();
-include($snip_path.'monthsdate/lang/' . $lang . '.php');
+include($snip_path.'monthdate/lang/' . $lang . '.php');
 
 $fullMonth = array(
     '1' => $_MLang['fm1'],
