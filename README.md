@@ -1,4 +1,4 @@
-# MonthsDate
+# MonthDate
 ## Display date with month name
 ### Snippet for Evolution CMS
 based on aDate snippet https://github.com/extras-evolution/aDate 
@@ -10,10 +10,10 @@ based on aDate snippet https://github.com/extras-evolution/aDate
 
 ### Usage:
 
-``` [[MonthsDate? &outFormat=`%d% %m% %y%` &lang=`it` &date=`[*pub_date*]` &date2=`[*pub_date*]`]]  ```
+``` [[MonthDate? &outFormat=`%d% %m% %y%` &lang=`it` &date=`[*pub_date*]` &date2=`[*pub_date*]`]]  ```
 
-``` [[MonthsDate? &date=`[*createdon*]`]]  ```  // System date
+``` [[MonthDate? &date=`[*createdon*]`]]  ```  // System date
 
-``` [[MonthsDate? &date=`[*tv_data*]`]]  ```    // Template Variable
+``` [[MonthDate? &date=`[*tv_data*]`]]  ```    // Template Variable
 
-``` [[MonthsDate? &date=`2024-12-24`]]  ```     // Formatted date
+``` [[MonthDate? &date=`2024-12-24`]]  ```     // Formatted date
