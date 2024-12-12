@@ -5,7 +5,7 @@
  * Display date with month name
  *
  * @category 	snippet
- * @version 	0.3
+ * @version 	1.0
  * @license 	http://www.gnu.org/copyleft/gpl.html GNU Public License (GPL)
  * @internal	@properties 
  * @internal	@modx_category add

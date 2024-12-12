@@ -3,10 +3,11 @@ if(!defined('MODX_BASE_PATH')){die('What are you doing? Get out of here!');}
 
 /**
  * MonthsDate Snippet - Formats dates with localized month names
- * @param string $date - date to use
- * @param string $date2 - backup date
- * @param bool $short - insert short month name
- * @param string $outFormat - date output template, a string to replace %d%, %m%, %y%
+ * Works with both system dates and template variables
+ * $date - date to use (can be TV or system date)
+ * $date2 - backup date (can be TV or system date)
+ * $short - insert short month name
+ * $outFormat - date output template, a string to replace %d%, %m%, %y%
  */
 
 global $modx;
@@ -45,10 +46,44 @@ $shortMonth = array(
     '12' => $_MLang['sm12']
 );
 
+// Function to process date input (handles both timestamps and formatted dates)
+function processDateInput($dateInput) {
+    global $modx;
+    
+    // If it's a TV placeholder, get its value
+    if (strpos($dateInput, '[*') !== false) {
+        $tvName = trim(str_replace(array('[*', '*]'), '', $dateInput));
+        $dateInput = $modx->documentObject[$tvName][1] ?? $modx->documentObject[$tvName] ?? '';
+    }
+    
+    // If empty, return false
+    if (empty($dateInput)) {
+        return false;
+    }
+    
+    // If it's already a timestamp, return it
+    if (is_numeric($dateInput) && strlen($dateInput) === 10) {
+        return (int)$dateInput;
+    }
+    
+    // Try to convert the date string to timestamp
+    $timestamp = strtotime($dateInput);
+    return $timestamp !== false ? $timestamp : false;
+}
+
+// Process primary and backup dates
+$primaryDate = processDateInput($date);
+$backupDate = isset($date2) ? processDateInput($date2) : false;
+
 // Determine which timestamp to use
-$timestamp = isset($date2) && $date2 > 0 ? $date2 : $date;
+$timestamp = $primaryDate !== false ? $primaryDate : $backupDate;
 
 try {
+    // If no valid date was found, throw exception
+    if ($timestamp === false) {
+        throw new Exception('No valid date provided');
+    }
+    
     // Create DateTime object from timestamp
     $dateObj = new DateTime();
     $dateObj->setTimestamp($timestamp);
