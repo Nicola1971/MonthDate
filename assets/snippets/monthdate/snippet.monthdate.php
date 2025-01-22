@@ -1,6 +1,5 @@
 <?php
 if(!defined('MODX_BASE_PATH')){die('What are you doing? Get out of here!');}
-
 /**
  * MonthDate Snippet - Formats dates with localized month names
  * Works with both system dates and template variables
@@ -8,8 +7,8 @@ if(!defined('MODX_BASE_PATH')){die('What are you doing? Get out of here!');}
  * $date2 - backup date (can be TV or system date)
  * $short - insert short month name
  * $outFormat - date output template, a string to replace %d%, %m%, %y%
+ * $invalidDate - custom message for invalid dates
  */
-
 global $modx;
 $lang = isset($lang) ? $lang : 'en';
 $snip_path = $modx->config['base_path'] . "assets/snippets/";
@@ -46,29 +45,57 @@ $shortMonth = array(
     '12' => $_MLang['sm12']
 );
 
-// Function to process date input (handles both timestamps and formatted dates)
-function processDateInput($dateInput) {
-    global $modx;
-    
-    // If it's a TV placeholder, get its value
-    if (strpos($dateInput, '[*') !== false) {
-        $tvName = trim(str_replace(array('[*', '*]'), '', $dateInput));
-        $dateInput = $modx->documentObject[$tvName][1] ?? $modx->documentObject[$tvName] ?? '';
+if (!function_exists('processDateInput')) {
+    function processDateInput($dateInput) {
+        global $modx;
+        
+        // If it's a TV placeholder, get its value
+        if (strpos($dateInput, '[*') !== false) {
+            $tvName = trim(str_replace(array('[*', '*]'), '', $dateInput));
+            $dateInput = $modx->documentObject[$tvName][1] ?? $modx->documentObject[$tvName] ?? '';
+        }
+        
+        // If empty, return false
+        if (empty($dateInput)) {
+            return false;
+        }
+        
+        // If it's already a timestamp, return it
+        if (is_numeric($dateInput) && strlen($dateInput) === 10) {
+            return (int)$dateInput;
+        }
+        
+        // Check for date format with slashes
+        if (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})$/', $dateInput, $matches)) {
+            // Determine if it's DD/MM/YYYY or MM/DD/YYYY based on the values
+            $part1 = (int)$matches[1];
+            $part2 = (int)$matches[2];
+            
+            if ($part1 > 12 && $part2 <= 12) {
+                // Must be DD/MM/YYYY
+                $day = $part1;
+                $month = $part2;
+            } elseif ($part2 > 12 && $part1 <= 12) {
+                // Must be MM/DD/YYYY
+                $month = $part1;
+                $day = $part2;
+            } else {
+                // Ambiguous case - default to DD/MM/YYYY
+                $day = $part1;
+                $month = $part2;
+            }
+            $year = $matches[3];
+            
+            // Validate date components
+            if (checkdate($month, $day, $year)) {
+                return mktime(0, 0, 0, $month, $day, $year);
+            }
+        }
+        
+        // Try standard strtotime as fallback
+        $timestamp = strtotime($dateInput);
+        return $timestamp !== false ? $timestamp : false;
     }
-    
-    // If empty, return false
-    if (empty($dateInput)) {
-        return false;
-    }
-    
-    // If it's already a timestamp, return it
-    if (is_numeric($dateInput) && strlen($dateInput) === 10) {
-        return (int)$dateInput;
-    }
-    
-    // Try to convert the date string to timestamp
-    $timestamp = strtotime($dateInput);
-    return $timestamp !== false ? $timestamp : false;
 }
 
 // Process primary and backup dates
@@ -79,9 +106,9 @@ $backupDate = isset($date2) ? processDateInput($date2) : false;
 $timestamp = $primaryDate !== false ? $primaryDate : $backupDate;
 
 try {
-    // If no valid date was found, throw exception
+    // If no valid date was found, return custom message or empty string
     if ($timestamp === false) {
-        throw new Exception('No valid date provided');
+        return isset($invalidDate) ? $invalidDate : '';
     }
     
     // Create DateTime object from timestamp
@@ -108,7 +135,6 @@ try {
     return $return;
     
 } catch (Exception $e) {
-    $modx->logEvent(1, 3, 'Error processing date in MonthsDate snippet: ' . $e->getMessage());
-    return '';
+    return isset($invalidDate) ? $invalidDate : '';
 }
 ?>
